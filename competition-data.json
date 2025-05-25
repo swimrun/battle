@@ -1,0 +1,9 @@
+[
+    ["Position", "Team Name", "Total Time", "Time Per Person", "Place"],
+    ["1", "Team Alpha", "10:30:00", "5:15:00", "1"],
+    ["2", "Team Beta", "11:00:00", "5:30:00", "2"],
+    ["3", "Team Gamma", "11:30:00", "5:45:00", "3"],
+    ["4", "Team Delta", "12:00:00", "6:00:00", "4"],
+    ["5", "The Dutch SwimRunners", "12:30:00", "6:15:00", "5"],
+    ["6", "Team Epsilon", "13:00:00", "6:30:00", "6"]
+] 

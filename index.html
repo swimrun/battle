@@ -85,11 +85,13 @@
                         seenEmpty = true;
                     }
                     if (!seenEmpty) {
-                        processedTeams.push([team[4], team[0], team[3], team[2]]);
+                        // Fix: Use the correct array indices for the data
+                        // [Place, Team Name, Total Time, Time Per Person]
+                        processedTeams.push([team[4], team[1], team[2], team[3]]);
                     }
                 });
 
-                // Sort teams
+                // Sort teams by place
                 processedTeams.sort((a, b) => parseInt(a[0]) - parseInt(b[0]));
 
                 // Find my team's position
