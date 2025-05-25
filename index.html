@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Swimrun Friendship Battle 2025</title>
+    <style>
+        .layout {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .table th, .table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        .label {
+            font-size: 14px;
+            color: #666;
+        }
+        .title {
+            font-weight: bold;
+        }
+        .title_bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .image {
+            height: 24px;
+        }
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <div class="title_bar">
+            <img class="image" src="https://usetrmnl.com/images/plugins/trmnl--render.svg">
+            <span class="title">My Swimrun Friendship Battle 2025</span>
+            <span class="instance">Teams</span>
+        </div>
+        
+        <div class="columns">
+            <div class="column">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th><span class="label label--small">Place</span></th>
+                            <th><span class="label label--small">Name</span></th>
+                            <th><span class="label label--small">Total</span></th>
+                            <th><span class="label label--small">Per Person</span></th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsTable">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const MY_TEAM = "The Dutch SwimRunners";
+        
+        // Function to fetch and process the data
+        async function loadCompetitionData() {
+            try {
+                // Replace this URL with your actual data source
+                const response = await fetch('competition-data.json');
+                const data = await response.json();
+                
+                // Process the data
+                let teams = data.slice(1); // Remove header row
+                let seenEmpty = false;
+                let processedTeams = [];
+                
+                teams.forEach(team => {
+                    if (team[4] === '') {
+                        seenEmpty = true;
+                    }
+                    if (!seenEmpty) {
+                        processedTeams.push([team[4], team[0], team[3], team[2]]);
+                    }
+                });
+
+                // Sort teams
+                processedTeams.sort((a, b) => parseInt(a[0]) - parseInt(b[0]));
+
+                // Find my team's position
+                let myPosition = null;
+                for (const team of processedTeams) {
+                    if (team[1] === MY_TEAM) {
+                        myPosition = parseInt(team[0]);
+                    }
+                }
+
+                // Filter teams to show
+                let finalTeams = [];
+                for (const team of processedTeams) {
+                    const position = parseInt(team[0]);
+                    if (position <= 3) {
+                        finalTeams.push(team);
+                        if (position === 3 && myPosition > 5) {
+                            finalTeams.push(["...", "...", "...", "..."]);
+                        }
+                        continue;
+                    }
+
+                    if (position >= myPosition - 1 && position <= myPosition + 1) {
+                        finalTeams.push(team);
+                    }
+                }
+
+                // Display the results
+                const tbody = document.getElementById('resultsTable');
+                tbody.innerHTML = ''; // Clear existing content
+                
+                finalTeams.forEach(team => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><span class="title title--small position">${team[0]}</span></td>
+                        <td><span class="label name">${team[1]}</span></td>
+                        <td><span class="label total">${team[2]}</span></td>
+                        <td><span class="label perperson">${team[3]}</span></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (error) {
+                console.error('Error loading competition data:', error);
+                document.getElementById('resultsTable').innerHTML = `
+                    <tr>
+                        <td colspan="4" style="text-align: center;">
+                            Error loading competition data. Please try again later.
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        // Load the data when the page loads
+        document.addEventListener('DOMContentLoaded', loadCompetitionData);
+    </script>
+</body>
+</html> 
