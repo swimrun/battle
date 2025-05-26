@@ -36,6 +36,83 @@
         .image {
             height: 24px;
         }
+        .footer {
+            margin-top: 20px;
+            padding: 10px;
+            border-top: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            color: #666;
+        }
+        .footer a {
+            color: #0066cc;
+            text-decoration: none;
+        }
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        .controls {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .team-selector {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .team-selector select {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .toggle {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
     </style>
 </head>
 <body>
@@ -44,6 +121,20 @@
             <img class="image" src="https://usetrmnl.com/images/plugins/trmnl--render.svg">
             <span class="title">My Swimrun Friendship Battle 2025</span>
             <span class="instance">Teams</span>
+        </div>
+
+        <div class="controls">
+            <div class="team-selector">
+                <label for="teamSelect">Favoriete team:</label>
+                <select id="teamSelect"></select>
+            </div>
+            <div class="toggle-container">
+                <label for="showAllToggle">Toon alle uitslagen:</label>
+                <label class="toggle">
+                    <input type="checkbox" id="showAllToggle">
+                    <span class="slider"></span>
+                </label>
+            </div>
         </div>
         
         <div class="columns">
@@ -62,91 +153,17 @@
                 </table>
             </div>
         </div>
+
+        <div class="footer">
+            <div>
+                <a id="sheetLink" href="" target="_blank">Bekijk uitslagen origineel via Google sheet</a>
+            </div>
+            <div id="lastUpdated">
+                Last updated: <span id="updateTime"></span>
+            </div>
+        </div>
     </div>
 
-    <script>
-        // Configuration
-        const MY_TEAM = "The Dutch SwimRunners";
-        
-        // Function to fetch and process the data
-        async function loadCompetitionData() {
-            try {
-                // Replace this URL with your actual data source
-                const response = await fetch('competition-data.json');
-                const data = await response.json();
-                
-                // Process the data
-                let teams = data.slice(1); // Remove header row
-                let seenEmpty = false;
-                let processedTeams = [];
-                
-                teams.forEach(team => {
-                    if (team[4] === '') {
-                        seenEmpty = true;
-                    }
-                    if (!seenEmpty) {
-                        // Fix: Use the correct array indices for the data
-                        // [Place, Team Name, Total Time, Time Per Person]
-                        processedTeams.push([team[4], team[1], team[2], team[3]]);
-                    }
-                });
-
-                // Sort teams by place
-                processedTeams.sort((a, b) => parseInt(a[0]) - parseInt(b[0]));
-
-                // Find my team's position
-                let myPosition = null;
-                for (const team of processedTeams) {
-                    if (team[1] === MY_TEAM) {
-                        myPosition = parseInt(team[0]);
-                    }
-                }
-
-                // Filter teams to show
-                let finalTeams = [];
-                for (const team of processedTeams) {
-                    const position = parseInt(team[0]);
-                    if (position <= 3) {
-                        finalTeams.push(team);
-                        if (position === 3 && myPosition > 5) {
-                            finalTeams.push(["...", "...", "...", "..."]);
-                        }
-                        continue;
-                    }
-
-                    if (position >= myPosition - 1 && position <= myPosition + 1) {
-                        finalTeams.push(team);
-                    }
-                }
-
-                // Display the results
-                const tbody = document.getElementById('resultsTable');
-                tbody.innerHTML = ''; // Clear existing content
-                
-                finalTeams.forEach(team => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td><span class="title title--small position">${team[0]}</span></td>
-                        <td><span class="label name">${team[1]}</span></td>
-                        <td><span class="label total">${team[2]}</span></td>
-                        <td><span class="label perperson">${team[3]}</span></td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            } catch (error) {
-                console.error('Error loading competition data:', error);
-                document.getElementById('resultsTable').innerHTML = `
-                    <tr>
-                        <td colspan="4" style="text-align: center;">
-                            Error loading competition data. Please try again later.
-                        </td>
-                    </tr>
-                `;
-            }
-        }
-
-        // Load the data when the page loads
-        document.addEventListener('DOMContentLoaded', loadCompetitionData);
-    </script>
+    <script src="js/app.js"></script>
 </body>
 </html> 
