@@ -5,7 +5,7 @@ class StorageInterface {
     }
 
     getFavoriteTeam() {
-        return this.storage.getItem('favoriteTeam') || 'Dutch Swimrunners';
+        return this.storage.getItem('favoriteTeam') || 'The Dutch SwimRunners';
     }
 
     setFavoriteTeam(team) {
@@ -23,134 +23,146 @@ class StorageInterface {
 
 // Competition data manager
 class CompetitionDataManager {
-    constructor(storageInterface) {
-        this.storageInterface = storageInterface;
-        this.competitionData = null;
+    constructor() {
         this.backendUrl = 'http://localhost:3000';
-        this.sheetUrl = 'https://docs.google.com/spreadsheets/d/12x2eCsVncoIHADVXxEpDAzDU4ZlnG10HK2RmWx0wCBQ/edit?gid=0#gid=0';
+        this.teamData = [];
+        this.nationData = [];
+        this.selectedTeam = localStorage.getItem('selectedTeam') || 'The Dutch SwimRunners';
+        this.showAllTeams = localStorage.getItem('showAllTeams') === 'true';
+        
+        this.initializeElements();
+        this.loadData();
+        this.setupEventListeners();
+    }
+
+    initializeElements() {
+        this.teamSelect = document.getElementById('teamSelect');
+        this.showAllTeamsCheckbox = document.getElementById('showAllTeams');
+        this.resultsTable = document.getElementById('resultsTable');
+        this.nationTable = document.getElementById('nationTable');
     }
 
     async loadData() {
         try {
-            console.log('Start loading data...');
-            const response = await fetch(`${this.backendUrl}/api/competition-data`);
-            console.log('Response status:', response.status);
-            if (!response.ok) throw new Error('Kon de uitslagen niet ophalen');
+            // Load team data
+            const teamResponse = await fetch(`${this.backendUrl}/api/competition-data`);
+            if (!teamResponse.ok) throw new Error('Failed to fetch team data');
+            this.teamData = await teamResponse.json();
             
-            const rawData = await response.json();
-            console.log('Raw data received:', rawData);
-            
-            // Transform the data to match the expected structure
-            this.competitionData = rawData.map(row => {
-                console.log('Processing row:', row);
-                return {
-                    position: row[0],
-                    team: row[1],
-                    totalTime: row[2],
-                    timePerPerson: row[3]
-                };
-            });
-            console.log('Transformed data:', this.competitionData);
-            
+            // Load nation data
+            const nationResponse = await fetch(`${this.backendUrl}/api/nation-summary`);
+            if (!nationResponse.ok) throw new Error('Failed to fetch nation data');
+            this.nationData = await nationResponse.json();
+
             this.updateUI();
-            document.getElementById('sheetLink').href = this.sheetUrl;
         } catch (error) {
-            console.error('Fout bij het laden van de uitslagen:', error);
-            console.error('Error details:', error.stack);
-            document.getElementById('resultsTable').innerHTML = '<tr><td colspan="4">Fout bij het laden van de uitslagen</td></tr>';
+            console.error('Error loading data:', error);
+            this.resultsTable.innerHTML = '<p class="error">Fout bij laden van resultaten</p>';
+            this.nationTable.innerHTML = '<p class="error">Fout bij laden van nation samenvatting</p>';
         }
-    }
-
-    getFilteredResults() {
-        if (!this.competitionData) return [];
-        
-        const showAll = this.storageInterface.getShowAllResults();
-        if (showAll) return this.competitionData;
-
-        const favoriteTeam = this.storageInterface.getFavoriteTeam();
-        const favoriteIndex = this.competitionData.findIndex(team => team.team === favoriteTeam);
-        
-        if (favoriteIndex === -1) return this.competitionData.slice(0, 3);
-
-        const topThree = this.competitionData.slice(0, 3);
-        const surroundingTeams = this.competitionData.slice(
-            Math.max(0, favoriteIndex - 3),
-            Math.min(this.competitionData.length, favoriteIndex + 4)
-        );
-
-        const result = [...new Set([...topThree, ...surroundingTeams])];
-        result.sort((a, b) => a.position - b.position);
-
-        // Add ellipsis if there are gaps
-        const finalResult = [];
-        for (let i = 0; i < result.length; i++) {
-            if (i > 0 && result[i].position - result[i-1].position > 1) {
-                finalResult.push({ isEllipsis: true });
-            }
-            finalResult.push(result[i]);
-        }
-
-        return finalResult;
     }
 
     updateUI() {
-        console.log('Updating UI with data:', this.competitionData);
-        const results = this.getFilteredResults();
-        console.log('Filtered results:', results);
-        const tbody = document.getElementById('resultsTable');
-        console.log('Table body element:', tbody);
-        tbody.innerHTML = '';
+        this.updateTeamSelector();
+        this.updateResultsTable();
+        this.updateNationTable();
+    }
 
-        results.forEach(team => {
-            if (team.isEllipsis) {
-                const row = tbody.insertRow();
-                const cell = row.insertCell();
-                cell.colSpan = 4;
-                cell.textContent = '...';
-                cell.style.textAlign = 'center';
-                return;
-            }
+    updateTeamSelector() {
+        this.teamSelect.innerHTML = this.teamData
+            .map(team => `<option value="${team.teamName}" ${team.teamName === this.selectedTeam ? 'selected' : ''}>${team.teamName}</option>`)
+            .join('');
+    }
 
-            const row = tbody.insertRow();
-            row.insertCell().textContent = team.position;
-            row.insertCell().textContent = team.team;
-            row.insertCell().textContent = team.totalTime;
-            row.insertCell().textContent = team.timePerPerson;
+    updateResultsTable() {
+        const selectedTeamIndex = this.teamData.findIndex(team => team.teamName === this.selectedTeam);
+        if (selectedTeamIndex === -1) return;
+
+        const selectedTeamPlace = parseInt(this.teamData[selectedTeamIndex].place);
+        const filteredTeams = this.teamData.filter(team => {
+            if (this.showAllTeams) return true;
+            const place = parseInt(team.place);
+            return place <= 3 || Math.abs(place - selectedTeamPlace) <= 3;
         });
 
-        // Update team selector
-        const teamSelector = document.getElementById('teamSelect');
-        console.log('Team selector element:', teamSelector);
-        teamSelector.innerHTML = '';
-        this.competitionData.forEach(team => {
-            const option = document.createElement('option');
-            option.value = team.team;
-            option.textContent = team.team;
-            option.selected = team.team === this.storageInterface.getFavoriteTeam();
-            teamSelector.appendChild(option);
+        // Sort data by place
+        const sortedData = [...filteredTeams].sort((a, b) => {
+            const placeA = parseInt(a.place) || 999; // Use high number for null/undefined places
+            const placeB = parseInt(b.place) || 999;
+            return placeA - placeB;
         });
 
-        // Update show all toggle
-        document.getElementById('showAllToggle').checked = this.storageInterface.getShowAllResults();
+        const rows = sortedData.map(team => `
+            <tr>
+                <td>${team.place || ''}</td>
+                <td>${team.teamName}</td>
+                <td>${team.numberOfMembers || ''}</td>
+                <td>${team.kmPerPerson || ''}</td>
+                <td>${team.totalKm || ''}</td>
+            </tr>
+        `).join('');
+
+        this.resultsTable.innerHTML = `
+            <table>
+                <thead>
+                    <tr>
+                        <th>Plaats</th>
+                        <th>Team</th>
+                        <th>Aantal Leden</th>
+                        <th>KM per Persoon</th>
+                        <th>Totale KM</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>
+        `;
+    }
+
+    updateNationTable() {
+        const rows = this.nationData.map(nation => `
+            <tr>
+                <td>${nation.place}</td>
+                <td>${nation.nation}</td>
+                <td>${nation.numberOfMembers}</td>
+                <td>${nation.kmPerPerson}</td>
+                <td>${nation.totalKm}</td>
+                <td>${nation.points}</td>
+            </tr>
+        `).join('');
+
+        this.nationTable.innerHTML = `
+            <table>
+                <thead>
+                    <tr>
+                        <th>Plaats</th>
+                        <th>Natie</th>
+                        <th>Aantal Leden</th>
+                        <th>KM per Persoon</th>
+                        <th>Totale KM</th>
+                        <th>Punten</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>
+        `;
+    }
+
+    setupEventListeners() {
+        this.teamSelect.addEventListener('change', (e) => {
+            this.selectedTeam = e.target.value;
+            localStorage.setItem('selectedTeam', this.selectedTeam);
+            this.updateUI();
+        });
+
+        this.showAllTeamsCheckbox.addEventListener('change', (e) => {
+            this.showAllTeams = e.target.checked;
+            localStorage.setItem('showAllTeams', this.showAllTeams);
+            this.updateUI();
+        });
     }
 }
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', () => {
-    const storageInterface = new StorageInterface();
-    const competitionManager = new CompetitionDataManager(storageInterface);
-
-    // Event listeners
-    document.getElementById('teamSelect').addEventListener('change', (e) => {
-        storageInterface.setFavoriteTeam(e.target.value);
-        competitionManager.updateUI();
-    });
-
-    document.getElementById('showAllToggle').addEventListener('change', (e) => {
-        storageInterface.setShowAllResults(e.target.checked);
-        competitionManager.updateUI();
-    });
-
-    // Load initial data
-    competitionManager.loadData();
+    new CompetitionDataManager();
 }); 

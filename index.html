@@ -113,6 +113,34 @@
         input:checked + .slider:before {
             transform: translateX(26px);
         }
+        .results-container {
+            display: flex;
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+        .team-results, .nation-summary {
+            flex: 1;
+        }
+        .nation-summary table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        .nation-summary th, .nation-summary td {
+            padding: 0.5rem;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        .nation-summary th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+        }
+        .nation-summary tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .nation-summary tr:hover {
+            background-color: #f0f0f0;
+        }
     </style>
 </head>
 <body>
@@ -125,38 +153,32 @@
 
         <div class="controls">
             <div class="team-selector">
-                <label for="teamSelect">Favoriete team:</label>
+                <label for="teamSelect">Selecteer je team:</label>
                 <select id="teamSelect"></select>
             </div>
-            <div class="toggle-container">
-                <label for="showAllToggle">Toon alle uitslagen:</label>
-                <label class="toggle">
-                    <input type="checkbox" id="showAllToggle">
-                    <span class="slider"></span>
+            <div class="show-all-toggle">
+                <label>
+                    <input type="checkbox" id="showAllTeams">
+                    Toon alle teams
                 </label>
             </div>
         </div>
         
-        <div class="columns">
-            <div class="column">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th><span class="label label--small">Place</span></th>
-                            <th><span class="label label--small">Name</span></th>
-                            <th><span class="label label--small">Total</span></th>
-                            <th><span class="label label--small">Per Person</span></th>
-                        </tr>
-                    </thead>
-                    <tbody id="resultsTable">
-                    </tbody>
-                </table>
+        <div class="results-container">
+            <div class="team-results">
+                <h2>Team Resultaten</h2>
+                <div id="resultsTable"></div>
+            </div>
+            
+            <div class="nation-summary">
+                <h2>Nation Samenvatting</h2>
+                <div id="nationTable"></div>
             </div>
         </div>
 
         <div class="footer">
             <div>
-                <a id="sheetLink" href="" target="_blank">Bekijk uitslagen origineel via Google sheet</a>
+                <a id="sheetLink" href="https://docs.google.com/spreadsheets/d/1Qn4UxXQJjRdsWrArnNIvSvuxSwnSkBgrI1gW5fKqV2A/edit#gid=2147483647" target="_blank">Bekijk originele Google Sheet</a>
             </div>
             <div id="lastUpdated">
                 Last updated: <span id="updateTime"></span>

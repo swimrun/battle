@@ -2,6 +2,7 @@ const request = require('supertest');
 const express = require('express');
 const fs = require('fs').promises;
 const path = require('path');
+const { transformTeamData, transformNationData } = require('./server');
 
 // Mock the Google Sheets API
 jest.mock('googleapis', () => ({
@@ -82,5 +83,41 @@ describe('API Endpoints', () => {
             .expect(500);
 
         expect(response.body).toHaveProperty('error');
+    });
+});
+
+describe('Data Transformation Tests', () => {
+    test('should correctly transform team data', () => {
+        const input = [
+            ['Backwaterman Knights', '5', '8,0', '40', '14']
+        ];
+        
+        const expected = [{
+            teamName: 'Backwaterman Knights',
+            numberOfMembers: 5,
+            kmPerPerson: 8.0,
+            totalKm: 40,
+            place: 14
+        }];
+
+        const result = transformTeamData(input);
+        expect(result).toEqual(expected);
+    });
+
+    test('should handle empty values correctly', () => {
+        const input = [
+            ['Team Name', '', '0,0', '0', '']
+        ];
+        
+        const expected = [{
+            teamName: 'Team Name',
+            numberOfMembers: null,
+            kmPerPerson: 0,
+            totalKm: 0,
+            place: null
+        }];
+
+        const result = transformTeamData(input);
+        expect(result).toEqual(expected);
     });
 }); 
