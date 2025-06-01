@@ -36,7 +36,7 @@ function AppContent() {
                         >
                             GitHub Issues
                         </a>
-                        <button onClick={() => setShowDisclaimer(false)}>Sluiten</button>
+                        <button onClick={() => setShowDisclaimer(false)}>{t('common.close')}</button>
                     </div>
                 </div>
             )}

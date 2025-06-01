@@ -15,6 +15,7 @@ export const fr = {
         favoriteTeam: 'Équipe favorite',
         nationSummary: 'Résumé par nation',
         disclaimer: 'Ceci est une version bêta. Les données et les fonctionnalités peuvent encore changer. Les données sont basées sur les informations de \'My SwimRun Championship Swimrun Friendship Battle 2025\', mais ils ne sont pas responsables de cette application et des erreurs qu\'elle pourrait contenir. Les erreurs peuvent être signalées via GitHub Issues.',
+        close: 'Fermer',
         status: {
             backend: 'Données en direct',
             cache: 'Données hors ligne',
