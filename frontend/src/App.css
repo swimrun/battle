@@ -50,7 +50,40 @@
 h1 {
     text-align: center;
     color: #333;
-    margin-bottom: 30px;
+    margin-bottom: 10px;
+}
+
+.meta-info {
+    text-align: center;
+    color: #666;
+    font-size: 0.9em;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+.version, .author {
+    color: #666;
+}
+
+.separator {
+    color: #999;
+}
+
+.disclaimer-link {
+    background: none;
+    border: none;
+    color: #007bff;
+    cursor: pointer;
+    padding: 0;
+    font-size: 0.9em;
+    text-decoration: underline;
+}
+
+.disclaimer-link:hover {
+    color: #0056b3;
 }
 
 .controls {
@@ -174,6 +207,13 @@ tr:hover {
     filter: brightness(0.95);
 }
 
+/* Medal emoji styling */
+td:first-child {
+    font-size: 1.5em;
+    text-align: center;
+    padding: 12px 8px;
+}
+
 .download-button {
     padding: 8px 16px;
     background-color: #28a745;
@@ -254,7 +294,7 @@ tr:hover {
     gap: 5px;
 }
 
-.language-button {
+.lang-btn {
     padding: 5px 10px;
     border: 1px solid #ddd;
     background: white;
@@ -264,11 +304,11 @@ tr:hover {
     transition: all 0.2s;
 }
 
-.language-button:hover {
+.lang-btn:hover {
     background: #f0f0f0;
 }
 
-.language-button.active {
+.lang-btn.active {
     background: #007bff;
     color: white;
     border-color: #007bff;
@@ -295,4 +335,66 @@ tr:hover {
     font-weight: bold;
     font-size: 0.8em;
     cursor: help;
+}
+
+.disclaimer-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.disclaimer-content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    max-width: 500px;
+    width: 90%;
+    text-align: center;
+}
+
+.disclaimer-content h3 {
+    margin-top: 0;
+    color: #333;
+}
+
+.disclaimer-content p {
+    margin: 20px 0;
+    color: #666;
+    line-height: 1.5;
+}
+
+.disclaimer-content button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-top: 0;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.disclaimer-content button:hover {
+    background-color: #0056b3;
+}
+
+.github-link {
+    display: inline-block;
+    margin: 10px 0 30px 0;
+    color: #007bff;
+    text-decoration: none;
+}
+
+.github-link:hover {
+    text-decoration: underline;
 }

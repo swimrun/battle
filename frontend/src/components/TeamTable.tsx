@@ -6,7 +6,10 @@ import { LanguageSelector } from './LanguageSelector';
 
 export function TeamTable() {
     const [teams, setTeams] = useState<Team[]>([]);
-    const [selectedTeam, setSelectedTeam] = useState<string>('The Dutch SwimRunners');
+    const [favoriteTeam, setFavoriteTeam] = useState<string>(() => {
+        // Initialize from localStorage or default to empty string
+        return localStorage.getItem('favoriteTeam') || 'The Dutch SwimRunners';
+    });
     const [showAllTeams, setShowAllTeams] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     const [lastUpdated, setLastUpdated] = useState<string>('');
@@ -14,6 +17,7 @@ export function TeamTable() {
     const [backendAvailable, setBackendAvailable] = useState(true);
     const [backendStatus, setBackendStatus] = useState<any>(null);
     const { t } = useLanguage();
+    const [selectedNation, setSelectedNation] = useState<string>('all');
 
     const environment = getEnvironment();
     const environmentColors = {
@@ -47,12 +51,17 @@ export function TeamTable() {
         loadData();
     }, []);
 
+    // Update localStorage when favorite team changes
+    useEffect(() => {
+        localStorage.setItem('favoriteTeam', favoriteTeam);
+    }, [favoriteTeam]);
+
     const filteredTeams = teams.filter(team => {
         if (showAllTeams) return true;
-        const selectedTeamPlace = teams.find(t => t.teamName === selectedTeam)?.place;
-        if (!selectedTeamPlace) return true;
+        const favoriteTeamPlace = teams.find(t => t.teamName === favoriteTeam)?.place;
+        if (!favoriteTeamPlace) return true;
         const place = team.place || 999;
-        return place <= 3 || Math.abs(place - selectedTeamPlace) <= 3;
+        return place <= 3 || Math.abs(place - favoriteTeamPlace) <= 3;
     });
 
     const sortedTeams = [...filteredTeams].sort((a, b) => {
@@ -76,13 +85,13 @@ export function TeamTable() {
             displayPlace: parseInt(place)
         }));
 
-        const selectedTeamPlace = teams.find(t => t.teamName === selectedTeam)?.place;
-        if (!selectedTeamPlace) return teamsAtPlace;
+        const favoriteTeamPlace = teams.find(t => t.teamName === favoriteTeam)?.place;
+        if (!favoriteTeamPlace) return teamsAtPlace;
 
         const currentPlace = parseInt(place);
         
         // Add ellipsis after top 3 only if there's a gap to the favorite team section
-        if (currentPlace === 3 && selectedTeamPlace > 6) {
+        if (currentPlace === 3 && favoriteTeamPlace > 6) {
             return [...teamsAtPlace, { 
                 teamName: '...', 
                 displayPlace: 3,
@@ -94,7 +103,7 @@ export function TeamTable() {
         }
 
         // Add ellipsis before favorite team section only if there's a gap
-        if (currentPlace === selectedTeamPlace - 3 && selectedTeamPlace > 6) {
+        if (currentPlace === favoriteTeamPlace - 3 && favoriteTeamPlace > 6) {
             return [{ 
                 teamName: '...', 
                 displayPlace: currentPlace,
@@ -107,7 +116,7 @@ export function TeamTable() {
 
         // Add ellipsis after favorite team section only if there are more teams after
         const lastPlace = Math.max(...Object.keys(teamsByPlace).map(Number));
-        if (currentPlace === selectedTeamPlace + 3 && lastPlace > selectedTeamPlace + 3) {
+        if (currentPlace === favoriteTeamPlace + 3 && lastPlace > favoriteTeamPlace + 3) {
             return [...teamsAtPlace, { 
                 teamName: '...', 
                 displayPlace: currentPlace,
@@ -131,7 +140,7 @@ export function TeamTable() {
 
     const getRowClassName = (team: Team) => {
         const classes: string[] = [];
-        if (team.teamName === selectedTeam) classes.push('selected-team');
+        if (team.teamName === favoriteTeam) classes.push('selected-team');
         if (team.place === 1) classes.push('first-place');
         if (team.place === 2) classes.push('second-place');
         if (team.place === 3) classes.push('third-place');
@@ -152,8 +161,6 @@ export function TeamTable() {
 
     return (
         <div>
-            <h2>Team Samenvatting</h2>
-            
             <div className="status-bar">
                 <div 
                     className={`status-indicator ${backendAvailable ? 'online' : 'offline'}`}
@@ -181,8 +188,8 @@ export function TeamTable() {
                     <label htmlFor="favorite-team">{t('common.favoriteTeam')}:</label>
                     <select 
                         id="favorite-team"
-                        value={selectedTeam} 
-                        onChange={(e) => setSelectedTeam(e.target.value)}
+                        value={favoriteTeam} 
+                        onChange={(e) => setFavoriteTeam(e.target.value)}
                     >
                         {teams.map(team => (
                             <option key={team.teamName} value={team.teamName}>
