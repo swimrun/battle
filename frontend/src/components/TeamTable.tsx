@@ -90,7 +90,7 @@ export function TeamTable() {
 
         const currentPlace = parseInt(place);
         
-        // Add ellipsis after top 3 only if there's a gap to the favorite team section
+        // Add ellipsis after top 3 if there's a gap to the favorite team section
         if (currentPlace === 3 && favoriteTeamPlace > 6) {
             return [...teamsAtPlace, { 
                 teamName: '...', 
@@ -102,7 +102,7 @@ export function TeamTable() {
             } as Team];
         }
 
-        // Add ellipsis before favorite team section only if there's a gap
+        // Add ellipsis before favorite team section if there's a gap
         if (currentPlace === favoriteTeamPlace - 3 && favoriteTeamPlace > 6) {
             return [{ 
                 teamName: '...', 
@@ -114,7 +114,7 @@ export function TeamTable() {
             } as Team, ...teamsAtPlace];
         }
 
-        // Add ellipsis after favorite team section only if there are more teams after
+        // Add ellipsis after favorite team section if there are more teams after
         const lastPlace = Math.max(...Object.keys(teamsByPlace).map(Number));
         if (currentPlace === favoriteTeamPlace + 3 && lastPlace > favoriteTeamPlace + 3) {
             return [...teamsAtPlace, { 
@@ -129,6 +129,43 @@ export function TeamTable() {
 
         return teamsAtPlace;
     });
+
+    // Add ellipsis rows where needed
+    const finalDisplayTeams = displayTeams.reduce((acc, team, index) => {
+        acc.push(team);
+        
+        // Add ellipsis after top 3 if next team is not in favorite team section
+        if (team.displayPlace === 3 && index < displayTeams.length - 1) {
+            const nextTeam = displayTeams[index + 1];
+            if (nextTeam.displayPlace && nextTeam.displayPlace > 6) {
+                acc.push({ 
+                    teamName: '...', 
+                    displayPlace: 3,
+                    numberOfMembers: null,
+                    kmPerPerson: null,
+                    totalKm: null,
+                    place: null
+                } as Team);
+            }
+        }
+
+        // Add ellipsis after favorite team section if there are more teams
+        if (team.teamName === favoriteTeam && index < displayTeams.length - 1) {
+            const nextTeam = displayTeams[index + 1];
+            if (nextTeam.displayPlace && team.displayPlace && nextTeam.displayPlace > team.displayPlace + 3) {
+                acc.push({ 
+                    teamName: '...', 
+                    displayPlace: team.displayPlace + 3,
+                    numberOfMembers: null,
+                    kmPerPerson: null,
+                    totalKm: null,
+                    place: null
+                } as Team);
+            }
+        }
+
+        return acc;
+    }, [] as Team[]);
 
     const getPlaceDisplay = (place: number | undefined) => {
         if (!place) return '';
@@ -238,7 +275,7 @@ export function TeamTable() {
                     </tr>
                 </thead>
                 <tbody>
-                    {displayTeams.map((team, index) => (
+                    {finalDisplayTeams.map((team, index) => (
                         <tr key={team.teamName} className={getRowClassName(team)}>
                             <td>{team.teamName === '...' ? '' : getPlaceDisplay(team.displayPlace)}</td>
                             <td>{team.teamName}</td>

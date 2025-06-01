@@ -188,17 +188,14 @@ tr:hover {
 
 .first-place {
     background-color: #ffd700;
-    font-weight: bold;
 }
 
 .second-place {
     background-color: #c0c0c0;
-    font-weight: bold;
 }
 
 .third-place {
     background-color: #cd7f32;
-    font-weight: bold;
 }
 
 .first-place:hover,

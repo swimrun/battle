@@ -16,7 +16,7 @@ const isTest = process.env.NODE_ENV === 'test';
 
 // CORS configuration
 const corsOptions = {
-    origin: process.env.FRONTEND_URL,
+    origin: process.env.FRONTEND_URL.split(','),
     methods: ['GET'],
     allowedHeaders: ['Content-Type'],
     credentials: true
@@ -310,11 +310,11 @@ app.use((req, res) => {
 });
 
 // Start the server
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', 'IPv4', () => {
     console.log(`Server runt op port ${PORT} in ${process.env.NODE_ENV || 'DEVELOPMENT'} mode`);
     console.log('\nAvailable endpoints:');
-    console.log('- GET Team data: http://localhost:3000/api/competition-data');
-    console.log('- GET Nation summary: http://localhost:3000/api/nation-summary');
+    console.log(`- GET Team data: http://localhost:${PORT}/api/competition-data`);
+    console.log(`- GET Nation summary: http://localhost:${PORT}/api/nation-summary`);
 });
 
 // Export the app for testing

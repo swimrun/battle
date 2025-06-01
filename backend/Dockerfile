@@ -1,5 +1,5 @@
 # Build stage for Node.js application
-FROM node:22-alpine AS nodejs
+FROM node:22-alpine
 
 WORKDIR /app
 
@@ -23,32 +23,8 @@ RUN if [ ! -f .env.production ]; then \
     cp .env.production .env; \
     fi
 
-# Final stage with Nginx
-FROM nginx:alpine
+# Expose port 3000
+EXPOSE 3000
 
-# Install Certbot and its Nginx plugin
-RUN apk add --no-cache certbot certbot-nginx
-
-# Create directories for SSL certificates
-RUN mkdir -p /var/www/certbot && \
-    mkdir -p /etc/letsencrypt
-
-# Copy Nginx configuration
-COPY nginx.conf /etc/nginx/nginx.conf
-
-# Copy Node.js application from the build stage
-COPY --from=nodejs /app /app
-
-# Install Node.js in the final image
-RUN apk add --no-cache nodejs npm
-
-# Set working directory
-WORKDIR /app
-
-# Expose ports for HTTP and HTTPS
-EXPOSE 80 443
-
-# Start both Nginx and Node.js
-COPY start.sh /start.sh
-RUN chmod +x /start.sh
-CMD ["/start.sh"] 
+# Start the application
+CMD ["npm", "start"] 
