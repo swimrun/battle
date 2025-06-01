@@ -51,6 +51,7 @@ jobs:
           github_token: ${{ secrets.DEPLOY_TOKEN }}
           publish_dir: ./frontend/dist
           publish_branch: gh-pages
-          destination_dir: battle
+          destination_dir: .  # Changed from 'battle' to root of gh-pages
           commit_message: "Deploy battle app"
-          force_orphan: true  # Force clean deployment 
+          force_orphan: true  # Force clean deployment
+          keep_files: false   # Don't keep any existing files 
