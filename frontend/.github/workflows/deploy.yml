@@ -6,9 +6,18 @@ on:
     paths:
       - 'battle/frontend/**'
 
+# Add permissions block
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -31,8 +40,12 @@ jobs:
           npm run build
 
       - name: Deploy to GitHub Pages
+        id: deployment
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           folder: battle/frontend/dist
           branch: gh-pages
-          clean: true 
+          clean: true
+          single-commit: true
+          commit-message: "Deploy battle app"
+          target-folder: battle 
