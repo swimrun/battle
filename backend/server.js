@@ -3,15 +3,35 @@ const cors = require('cors');
 const fs = require('fs').promises;
 const path = require('path');
 const https = require('https');
-require('dotenv').config();
+const swaggerUi = require('swagger-ui-express');
+const swaggerDocs = require('./swagger');
+
+// Load environment variables based on NODE_ENV
+const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env.local';
+require('dotenv').config({ path: envFile });
 
 const app = express();
-const port = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000;
 const isTest = process.env.NODE_ENV === 'test';
 
+// CORS configuration
+const corsOptions = {
+    origin: process.env.FRONTEND_URL,
+    methods: ['GET'],
+    allowedHeaders: ['Content-Type'],
+    credentials: true
+};
+
 // Middleware
-app.use(cors());
+app.use(cors(corsOptions));
+console.log(corsOptions);
 app.use(express.json());
+
+// Create a router for API routes
+const apiRouter = express.Router();
+
+// Swagger UI
+apiRouter.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 // Function to get test data
 async function getTestData() {
@@ -64,14 +84,28 @@ function processResponse(res, resolve, reject) {
         try {
             // Parse CSV data and clean it up
             const rows = data.split('\n')
-                .map(row => row.split(','))
+                .map(row => {
+                    // Handle quoted values properly
+                    const result = [];
+                    let current = '';
+                    let inQuotes = false;
+                    
+                    for (let i = 0; i < row.length; i++) {
+                        const char = row[i];
+                        if (char === '"') {
+                            inQuotes = !inQuotes;
+                        } else if (char === ',' && !inQuotes) {
+                            result.push(current.trim());
+                            current = '';
+                        } else {
+                            current += char;
+                        }
+                    }
+                    result.push(current.trim());
+                    return result;
+                })
                 .filter(row => row.length > 1) // Skip empty rows
                 .map(row => row.map(cell => cell.trim().replace(/^"|"$/g, ''))); // Clean up cells
-
-            console.log('\nRaw CSV data for first few rows:');
-            rows.slice(0, 5).forEach((row, index) => {
-                console.log(`Row ${index}:`, row);
-            });
 
             // Find the index where the nation summary starts
             const nationIndex = rows.findIndex(row => row[0] === 'Nation');
@@ -111,8 +145,8 @@ function transformTeamData(rows) {
         teamName: row[0] || '', // Team (kolom A)
         numberOfMembers: parseInteger(row[1]), // # of member (kolom B)
         kmPerPerson: parseDecimal(row[2]), // per Person (kolom C)
-        totalKm: parseDecimal(row[4]), // Total (kolom E)
-        place: parseInteger(row[5]) // Place (kolom F)
+        totalKm: parseDecimal(row[3]), // Total (kolom D)
+        place: parseInteger(row[4]) // Place (kolom E)
     }));
 }
 
@@ -128,8 +162,43 @@ function transformNationData(rows) {
     }));
 }
 
-// Routes
-app.get('/api/competition-data', async (req, res) => {
+/**
+ * @swagger
+ * /api/competition-data:
+ *   get:
+ *     summary: Haalt team rankings data op
+ *     description: Retourneert alle team data inclusief posities en tijden
+ *     responses:
+ *       200:
+ *         description: Succesvol team data opgehaald
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   teamName:
+ *                     type: string
+ *                     description: Naam van het team
+ *                   numberOfMembers:
+ *                     type: number
+ *                     description: Aantal teamleden
+ *                   kmPerPerson:
+ *                     type: number
+ *                     description: Kilometers per persoon
+ *                   totalKm:
+ *                     type: number
+ *                     description: Totale kilometers
+ *                   place:
+ *                     type: number
+ *                     description: Plaats in de ranking
+ *       404:
+ *         description: Geen team data gevonden
+ *       500:
+ *         description: Server error
+ */
+apiRouter.get('/competition-data', async (req, res) => {
     try {
         let data;
         
@@ -137,31 +206,65 @@ app.get('/api/competition-data', async (req, res) => {
             // Use test data
             data = await getTestData();
         } else {
-            // Validate required environment variables
-            if (!process.env.GOOGLE_SHEET_ID) {
-                throw new Error('GOOGLE_SHEET_ID is not set in environment variables');
+            // Fetch from Google Sheet
+            const sheetId = process.env.GOOGLE_SHEET_ID;
+            if (!sheetId) {
+                throw new Error('GOOGLE_SHEET_ID not configured');
             }
-
-            // Fetch public sheet data
-            data = await fetchSheetData(process.env.GOOGLE_SHEET_ID);
+            data = await fetchSheetData(sheetId);
         }
 
-        if (!data.teams || data.teams.length === 0) {
-            return res.status(404).json({ error: 'No team data found.' });
+        if (!data || !data.teams || data.teams.length === 0) {
+            return res.status(404).json({ error: 'No team data found' });
         }
 
         res.json(data.teams);
     } catch (error) {
         console.error('Error fetching team data:', error);
-        res.status(500).json({ 
-            error: 'Failed to fetch team data',
-            details: error.message 
-        });
+        res.status(500).json({ error: 'Failed to fetch team data' });
     }
 });
 
-// New endpoint for nation summary data
-app.get('/api/nation-summary', async (req, res) => {
+/**
+ * @swagger
+ * /api/nation-summary:
+ *   get:
+ *     summary: Haalt nation rankings data op
+ *     description: Retourneert alle nation data inclusief posities en tijden
+ *     responses:
+ *       200:
+ *         description: Succesvol nation data opgehaald
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   nation:
+ *                     type: string
+ *                     description: Naam van de natie
+ *                   numberOfMembers:
+ *                     type: number
+ *                     description: Aantal leden
+ *                   kmPerPerson:
+ *                     type: number
+ *                     description: Kilometers per persoon
+ *                   totalKm:
+ *                     type: number
+ *                     description: Totale kilometers
+ *                   place:
+ *                     type: number
+ *                     description: Plaats in de ranking
+ *                   points:
+ *                     type: number
+ *                     description: Punten
+ *       404:
+ *         description: Geen nation data gevonden
+ *       500:
+ *         description: Server error
+ */
+apiRouter.get('/nation-summary', async (req, res) => {
     try {
         let data;
         
@@ -169,45 +272,40 @@ app.get('/api/nation-summary', async (req, res) => {
             // Use test data
             data = await getTestData();
         } else {
-            // Validate required environment variables
-            if (!process.env.GOOGLE_SHEET_ID) {
-                throw new Error('GOOGLE_SHEET_ID is not set in environment variables');
+            // Fetch from Google Sheet
+            const sheetId = process.env.GOOGLE_SHEET_ID;
+            if (!sheetId) {
+                throw new Error('GOOGLE_SHEET_ID not configured');
             }
-
-            // Fetch public sheet data
-            data = await fetchSheetData(process.env.GOOGLE_SHEET_ID);
+            data = await fetchSheetData(sheetId);
         }
 
-        if (!data.nations || data.nations.length === 0) {
-            return res.status(404).json({ error: 'No nation summary data found.' });
+        if (!data || !data.nations || data.nations.length === 0) {
+            return res.status(404).json({ error: 'No nation data found' });
         }
 
         res.json(data.nations);
     } catch (error) {
-        console.error('Error fetching nation summary data:', error);
-        res.status(500).json({ 
-            error: 'Failed to fetch nation summary data',
-            details: error.message 
-        });
+        console.error('Error fetching nation data:', error);
+        res.status(500).json({ error: 'Failed to fetch nation data' });
     }
 });
 
-// Only start the server if this file is run directly
-if (require.main === module) {
-    app.listen(port, () => {
-        const baseUrl = `http://localhost:${port}`;
-        const teamApiUrl = `${baseUrl}/api/competition-data`;
-        const nationApiUrl = `${baseUrl}/api/nation-summary`;
-        console.log(`\nServer runt op port ${port} in ${isTest ? 'TEST' : 'PRODUCTION'} mode`);
-        console.log('\nAvailable endpoints:');
-        console.log(`- GET Team data: ${teamApiUrl}`);
-        console.log(`- GET Nation summary: ${nationApiUrl}`);
-    });
-}
+// Mount the API router under /api
+app.use('/api', apiRouter);
 
-// Export functions for testing
-module.exports = {
-    app,
-    transformTeamData,
-    transformNationData
-}; 
+// Add a catch-all route to return 404 for non-API routes
+app.use((req, res) => {
+    res.status(404).send('Not found');
+});
+
+// Start the server
+app.listen(PORT, () => {
+    console.log(`Server runt op port ${PORT} in ${process.env.NODE_ENV || 'DEVELOPMENT'} mode`);
+    console.log('\nAvailable endpoints:');
+    console.log('- GET Team data: http://localhost:3000/api/competition-data');
+    console.log('- GET Nation summary: http://localhost:3000/api/nation-summary');
+});
+
+// Export the app for testing
+module.exports = { app, transformTeamData, transformNationData }; 

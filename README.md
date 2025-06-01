@@ -10,14 +10,27 @@ Frontend single page application voor de Swimrun Competition resultaten. Deze ap
 
 ## Hoe te draaien
 
-1. Zorg dat de backend server draait op http://localhost:3000
+1. Eerst backend
 
-2. Start de frontend development server:
-   ```bash
-   npx http-server .
-   ```
+Zorg dat de backend server draait op http://localhost:3000
 
-De frontend is nu beschikbaar op http://localhost:8080
+```bash
+cd battle/backend
+node server.js
+```
+
+2. Dan front-end
+
+Start de frontend development server met
+
+```bash
+cd battle/frontend
+npm run dev
+```
+
+De frontend is nu beschikbaar op http://localhost:5173
+
+Raar he, dat backend zonder streepje is, en front-end mét. Maarja.
 
 ## Features
 

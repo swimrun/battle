@@ -1,110 +1,177 @@
-# Swimrun Competition Backend
+# Swimrun Backend Service
 
-Backend service voor de Swimrun Competition resultaten. Deze service haalt de ruwe competitie data op uit Google Sheets en serveert deze via een REST API endpoint. De data wordt gebruikt door de frontend single page application om een gefilterde weergave te tonen van de uitslagen, met focus op de top 3 en de positie van het favoriete team.
+Backend service for the Swimrun Competition results, providing API endpoints for team and nation rankings.
 
-## Projectstructuur
+## Tech Stack
 
-```
-battle/backend/
-├── server.js        # Main application file
-├── test-data.json   # Test data voor development
-├── package.json     # Dependencies en scripts
-└── README.md        # Deze documentatie
-```
+- Node.js 22
+- Express.js
+- Nginx (reverse proxy)
+- Let's Encrypt SSL
+- Google Sheets API
+- Swagger/OpenAPI for documentation
+- Jest for testing
 
-## Vereisten
+## Prerequisites
 
-- [Node.js](https://nodejs.org/) (versie 20 of hoger)
-- [npm](https://www.npmjs.com/) (komt met Node.js)
-- [Docker](https://www.docker.com/get-started) (optioneel, voor container deployment)
+- Node.js 22 or higher
+- Docker (for containerized deployment)
+- Google Sheets API credentials (for production)
+- Domain name pointing to your server
+- Port 80 and 443 open on your server
 
-## Hoe te draaien
+## Environment Setup
 
-### Lokaal Development
+The application uses different environment files for different purposes:
 
-1. Installeer dependencies:
-   ```bash
-   npm install
-   ```
+1. `.env.example` - Template file showing required environment variables
+2. `.env.development` - Local development settings
+3. `.env.production` - Production deployment settings
 
-2. Maak een `.env` bestand aan met de benodigde variabelen:
-   ```bash
-   cp .env.example .env
-   ```
+To set up your environment:
 
-3. Vul de volgende variabelen in in je `.env` bestand:
-   ```
-   GOOGLE_SHEET_ID=12x2eCsVncoIHADVXxEpDAzDU4ZlnG10HK2RmWx0wCBQ
-   PORT=3000
-   NODE_ENV=development
-   ```
-
-4. Start de server:
-   ```bash
-   # Productie mode
-   npm start
-
-   # Test mode (gebruikt test-data.json)
-   npm run start:test
-   ```
-
-De server draait nu op `http://localhost:3000`
-
-### Met Docker
-
-#### Container starten
-
+1. For local development:
 ```bash
-docker run -d \
-  --name swimrun-backend \
-  -p 3000:3000 \
-  -e GOOGLE_SHEET_ID=12x2eCsVncoIHADVXxEpDAzDU4ZlnG10HK2RmWx0wCBQ \
-  bartvanderwal/swimrun-backend:latest
+cp .env.example .env.development
+# Edit .env.development with your local settings
 ```
 
-#### Container updaten voor nieuwe applicatie
-
+2. For production:
 ```bash
-# Build nieuwe image
-docker build -t bartvanderwal/swimrun-backend:latest .
-
-# Push naar Docker Hub
-docker push bartvanderwal/swimrun-backend:latest
+cp .env.example .env.production
+# Edit .env.production with your production settings
 ```
 
-## Environment Variables
-
+Required environment variables:
+- `NODE_ENV`: Environment name (development, test, staging, production)
 - `PORT`: Server port (default: 3000)
-- `GOOGLE_SHEET_ID`: ID van de Google Sheet
-- `NODE_ENV`: 'test' voor test mode, anders productie mode
+- `FRONTEND_URL`: URL of the frontend application (for CORS)
+- `GOOGLE_SHEET_ID`: ID of the Google Sheet containing competition data
 
-## API Endpoints
+## Development Setup
 
-- `GET /api/competition-data`: Haalt de volledige competitie data op uit Google Sheets. De data bevat alle teams met hun posities, totale tijden en tijden per persoon. Deze data wordt door de frontend single page application gebruikt om een gefilterde weergave te maken die focust op de top 3 en de positie van het favoriete team.
-
-## Development
-
-### Tests uitvoeren
-
+1. Install dependencies:
 ```bash
-# Run tests
-npm test
+npm install
+```
 
-# Run tests in watch mode
+2. Start the development server:
+```bash
+npm start
+```
+
+## Testing
+
+Run the test suite:
+```bash
+npm test
+```
+
+Run tests in watch mode:
+```bash
 npm run test:watch
 ```
 
-## Bijdragen
+## Docker Deployment
 
-1. Fork de repository
-2. Maak een feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit je changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push naar de branch (`git push origin feature/AmazingFeature`)
-5. Open een Pull Request
+### Local Development (ARM64/M1/M2)
 
-## Bronnen
+For local development on ARM-based machines (M1/M2 Macs):
 
-- Microsoft Azure DevOps. (z.d.). *Create a README for your project*. Geraadpleegd mei 2025 van [https://learn.microsoft.com/en-us/azure/devops/repos/git/create-a-readme?view=azure-devops](https://learn.microsoft.com/en-us/azure/devops/repos/git/create-a-readme?view=azure-devops)
-- Node.js. (z.d.). *Installation Guide*. Geraadpleegd mei 2025 van [https://nodejs.org/en/download/package-manager/](https://nodejs.org/en/download/package-manager/)
-- Docker. (z.d.). *Documentation*. Geraadpleegd mei 2025 van [https://docs.docker.com/](https://docs.docker.com/)
-- Google. (z.d.). *Sheets API Documentation*. Geraadpleegd mei 2025 van [https://developers.google.com/sheets/api/guides/concepts](https://developers.google.com/sheets/api/guides/concepts)
+```bash
+# Build the image
+docker build -t swimrun-backend:local .
+
+# Run the container
+docker run -p 80:80 -p 443:443 swimrun-backend:local
+```
+
+### Production Deployment (AMD64)
+
+For production deployment on x86/amd64 servers:
+
+```bash
+# Check if builder exists
+docker buildx ls
+
+# If builder doesn't exist, create it
+docker buildx create --name mybuilder --use
+
+# If builder exists, use it
+docker buildx use mybuilder
+
+# Build and push for AMD64 platform
+docker buildx build --platform linux/amd64 \
+  -t bartvanderwal/swimrun-backend:latest \
+  --push .
+
+# Run the container in detached mode
+docker run -d --name swimrun-backend \
+  -p 80:80 \
+  -p 443:443 \
+  -v /etc/letsencrypt:/etc/letsencrypt \
+  -v /var/www/certbot:/var/www/certbot \
+  bartvanderwal/swimrun-backend:latest
+
+# View logs
+docker logs -f swimrun-backend
+
+# Stop the container
+docker stop swimrun-backend
+
+# Remove the container
+docker rm swimrun-backend
+```
+
+### SSL Certificate Setup
+
+The container automatically handles SSL certificate setup and renewal using Let's Encrypt. To set up SSL:
+
+1. Make sure your domain (api.battle.swimrun.group) points to your server's IP address
+2. Ensure ports 80 and 443 are open on your server
+3. Run the container with the volume mounts for SSL certificates
+4. The container will automatically obtain and configure SSL certificates
+
+To manually renew certificates:
+```bash
+docker exec swimrun-backend certbot renew
+```
+
+### Updating the Container
+
+When a new version is pushed to Docker Hub, you can update the container with:
+
+```bash
+# Pull the latest image (force pull)
+docker pull bartvanderwal/swimrun-backend:latest
+
+# Stop and remove the old container
+docker stop swimrun-backend
+docker rm swimrun-backend
+
+# Start a new container with the latest image
+docker run -d --name swimrun-backend \
+  -p 80:80 \
+  -p 443:443 \
+  -v /etc/letsencrypt:/etc/letsencrypt \
+  -v /var/www/certbot:/var/www/certbot \
+  bartvanderwal/swimrun-backend:latest
+```
+
+## API Endpoints
+
+### GET /api/competition-data
+
+Returns team rankings data including positions and times.
+
+### GET /api/nation-summary
+
+Returns nation summary data with total participants and rankings.
+
+## API Documentation
+
+Swagger documentation is available at `/api-docs` when the server is running.
+
+## License
+
+ISC

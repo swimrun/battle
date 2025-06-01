@@ -1,0 +1,35 @@
+services:
+  nodejs:
+    build:
+      context: .
+      dockerfile: Dockerfile.node
+    environment:
+      - NODE_ENV=development
+      - DOMAIN=api.battle.local
+    networks:
+      - app-network
+
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile.nginx
+    environment:
+      - NODE_ENV=development
+      - DOMAIN=api.battle.local
+    network_mode: "host"  # Use host networking
+    restart: unless-stopped
+    volumes:
+      - certbot_data:/var/www/certbot
+      - certbot_etc:/etc/letsencrypt
+    depends_on:
+      - nodejs
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  certbot_data:
+  certbot_etc: 

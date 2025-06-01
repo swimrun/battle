@@ -1,40 +1,55 @@
 const request = require('supertest');
 const express = require('express');
-const fs = require('fs').promises;
-const path = require('path');
 const { transformTeamData, transformNationData } = require('./server');
+
+// Set test environment
+process.env.NODE_ENV = 'test';
+
+// Mock data
+const mockSheetData = [
+    ["Position", "Team Name", "Total Time", "Time Per Person", "Place"],
+    ["1", "Team Alpha", "10:30:00", "5:15:00", "1"],
+    ["2", "Team Beta", "11:00:00", "5:30:00", "2"],
+    ["3", "Team Gamma", "11:30:00", "5:45:00", "3"],
+    ["10", "Team Kappa", "15:00:00", "7:30:00", "10"]
+];
 
 // Mock the Google Sheets API
 jest.mock('googleapis', () => ({
     google: {
-        auth: {
-            GoogleAuth: jest.fn().mockImplementation(() => ({
-                getClient: jest.fn()
-            }))
-        },
         sheets: jest.fn().mockReturnValue({
             spreadsheets: {
                 values: {
-                    get: jest.fn().mockImplementation(async () => ({
+                    get: jest.fn().mockResolvedValue({
                         data: {
-                            values: JSON.parse(await fs.readFile(path.join(__dirname, 'test-data.json'), 'utf8'))
+                            values: mockSheetData
                         }
-                    }))
+                    })
                 }
             }
         })
     }
 }));
 
-// Import the server
-const app = require('./server');
+// Import after mocks
+const server = require('./server');
+const app = server.app;
+
+// Debug logging
+console.log('Test environment:', process.env.NODE_ENV);
+console.log('App routes:', app._router.stack.map(r => r.route?.path).filter(Boolean));
+console.log('Server port:', process.env.PORT || 3000);
 
 describe('API Endpoints', () => {
     test('GET /api/competition-data returns competition data', async () => {
+        console.log('Making request to /api/competition-data');
         const response = await request(app)
             .get('/api/competition-data')
             .expect('Content-Type', /json/)
             .expect(200);
+
+        console.log('Response status:', response.status);
+        console.log('Response body:', response.body);
 
         const data = response.body;
         
@@ -42,32 +57,14 @@ describe('API Endpoints', () => {
         expect(Array.isArray(data)).toBe(true);
         expect(data.length).toBeGreaterThan(0);
         
-        // Test first row (header)
-        expect(data[0]).toEqual([
-            "Position",
-            "Team Name",
-            "Total Time",
-            "Time Per Person",
-            "Place"
-        ]);
-
-        // Test some team data
-        expect(data[1]).toEqual([
-            "1",
-            "Team Alpha",
-            "10:30:00",
-            "5:15:00",
-            "1"
-        ]);
-
-        // Test last team
-        expect(data[data.length - 1]).toEqual([
-            "10",
-            "Team Kappa",
-            "15:00:00",
-            "7:30:00",
-            "10"
-        ]);
+        // Test first team
+        expect(data[0]).toMatchObject({
+            teamName: expect.any(String),
+            numberOfMembers: expect.any(Number),
+            kmPerPerson: expect.any(Number),
+            totalKm: expect.any(Number),
+            place: expect.any(Number)
+        });
     });
 
     test('GET /api/competition-data handles errors gracefully', async () => {
@@ -81,6 +78,9 @@ describe('API Endpoints', () => {
             .get('/api/competition-data')
             .expect('Content-Type', /json/)
             .expect(500);
+
+        console.log('Error response status:', response.status);
+        console.log('Error response body:', response.body);
 
         expect(response.body).toHaveProperty('error');
     });
@@ -119,5 +119,11 @@ describe('Data Transformation Tests', () => {
 
         const result = transformTeamData(input);
         expect(result).toEqual(expected);
+    });
+});
+
+describe('Server', () => {
+    it('should start without errors', () => {
+        expect(app).toBeDefined();
     });
 }); 

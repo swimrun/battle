@@ -52,6 +52,22 @@ export function TeamTable() {
         return teamsAtPlace;
     });
 
+    const getPlaceDisplay = (place: number) => {
+        if (place === 1) return '🥇';
+        if (place === 2) return '🥈';
+        if (place === 3) return '🥉';
+        return place.toString();
+    };
+
+    const getRowClassName = (team: Team) => {
+        const classes = [];
+        if (team.teamName === selectedTeam) classes.push('selected-team');
+        if (team.place === 1) classes.push('first-place');
+        if (team.place === 2) classes.push('second-place');
+        if (team.place === 3) classes.push('third-place');
+        return classes.join(' ');
+    };
+
     if (error) return <p className="error">{error}</p>;
 
     return (
@@ -94,8 +110,8 @@ export function TeamTable() {
                 <tbody>
                     {displayTeams.map((team, index) => (
                         <React.Fragment key={team.teamName}>
-                            <tr className={team.teamName === selectedTeam ? 'selected-team' : ''}>
-                                <td>{team.displayPlace}</td>
+                            <tr className={getRowClassName(team)}>
+                                <td>{getPlaceDisplay(team.displayPlace)}</td>
                                 <td>{team.teamName}</td>
                                 <td>{team.numberOfMembers || ''}</td>
                                 <td>{team.kmPerPerson || ''}</td>

@@ -1,12 +1,76 @@
-# React + Vite
+# My Swimrun Friendship Battle 2025 Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Dit is de frontend voor de My Swimrun Friendship Battle 2025 competitie. Het toont team rankings en nation samenvattingen in een moderne React applicatie.
 
-Currently, two official plugins are available:
+## Technische Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- React 18
+- TypeScript
+- Vite
+- Modern CSS
 
-## Expanding the ESLint configuration
+## Ontwikkeling
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### Vereisten
+
+- Node.js (v16 of hoger)
+- npm (v7 of hoger)
+
+### Installatie
+
+1. Installeer dependencies:
+```bash
+npm install
+```
+
+2. Maak een `.env` bestand aan in de frontend directory:
+```bash
+VITE_API_URL=http://localhost:3000
+```
+
+### Development Server Starten
+
+```bash
+npm run dev
+```
+
+Dit start de development server op `http://localhost:5173`.
+
+### Productie Build Maken
+
+```bash
+npm run build
+```
+
+Dit maakt een productie build in de `dist` directory.
+
+### Productie Build Preview
+
+```bash
+npm run preview
+```
+
+Dit toont een preview van de productie build lokaal.
+
+## Project Structuur
+
+- `src/components/` - React componenten
+- `src/services/` - API services
+- `src/types/` - TypeScript type definities
+- `src/App.css` - Hoofd styles
+
+## Functionaliteiten
+
+- Team rankings met podium highlighting
+- Nation samenvatting
+- Favoriete team selectie
+- Gefilterde weergave van teams rond je favoriete team
+- Responsive design
+
+## Backend Integratie
+
+De frontend verwacht een backend server op de URL gespecificeerd in `VITE_API_URL` (standaard: `http://localhost:3000`).
+
+## Licentie
+
+MIT
