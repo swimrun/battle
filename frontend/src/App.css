@@ -50,13 +50,17 @@
 h1 {
     text-align: center;
     color: #333;
+    margin-bottom: 30px;
 }
 
 .controls {
-    margin-bottom: 20px;
     display: flex;
-    gap: 20px;
+    justify-content: space-between;
     align-items: center;
+    margin: 20px 0;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
 }
 
 select {
@@ -68,7 +72,9 @@ select {
 table {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 40px;
+    margin-top: 20px;
+    background-color: white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 th, td {
@@ -78,21 +84,22 @@ th, td {
 }
 
 th {
-    background-color: #f5f5f5;
-    font-weight: bold;
+    background-color: #f8f9fa;
+    font-weight: 600;
+    color: #333;
 }
 
 tr:hover {
-    background-color: #f9f9f9;
+    background-color: #f5f5f5;
 }
 
 .error {
-    color: red;
+    color: #dc3545;
     text-align: center;
     padding: 20px;
-    background-color: #fff0f0;
-    border: 1px solid #ffcccc;
-    border-radius: 4px;
+    background-color: #f8d7da;
+    border-radius: 5px;
+    margin: 20px 0;
 }
 
 .selected-team {
@@ -106,28 +113,28 @@ tr:hover {
 
 .tabs {
     display: flex;
-    gap: 10px;
+    justify-content: center;
     margin-bottom: 20px;
-    justify-content: flex-start;
 }
 
 .tab {
     padding: 10px 20px;
+    margin: 0 10px;
     border: none;
-    background: none;
+    background-color: #f0f0f0;
     cursor: pointer;
-    border-radius: 20px;
+    border-radius: 5px;
     font-size: 16px;
-    transition: all 0.3s ease;
+    transition: background-color 0.3s;
+}
+
+.tab:hover {
+    background-color: #e0e0e0;
 }
 
 .tab.active {
-    background-color: #4a90e2;
+    background-color: #007bff;
     color: white;
-}
-
-.tab:not(.active):hover {
-    background-color: #f0f0f0;
 }
 
 .select-group {
@@ -165,4 +172,127 @@ tr:hover {
 .second-place:hover,
 .third-place:hover {
     filter: brightness(0.95);
+}
+
+.download-button {
+    padding: 8px 16px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.download-button:hover {
+    background-color: #218838;
+}
+
+.last-updated {
+    text-align: right;
+    color: #666;
+    font-size: 0.9em;
+    margin: 10px 0;
+}
+
+.sheet-link {
+    color: #007bff;
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    background-color: #e9ecef;
+    transition: background-color 0.3s;
+}
+
+.sheet-link:hover {
+    background-color: #dee2e6;
+}
+
+.status-bar {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 5px 10px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 0.8em;
+}
+
+.status-indicator.online {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.status-indicator.offline {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.data-source {
+    padding: 3px 8px;
+    border-radius: 12px;
+    background-color: #e2e3e5;
+    color: #383d41;
+    font-size: 0.8em;
+}
+
+/* Language selector styles */
+.language-selector {
+    display: flex;
+    gap: 5px;
+}
+
+.language-button {
+    padding: 5px 10px;
+    border: 1px solid #ddd;
+    background: white;
+    cursor: pointer;
+    border-radius: 3px;
+    font-size: 0.9em;
+    transition: all 0.2s;
+}
+
+.language-button:hover {
+    background: #f0f0f0;
+}
+
+.language-button.active {
+    background: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+.warning-message {
+    background-color: #fff3cd;
+    color: #856404;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 5px;
+    text-align: center;
+    font-style: italic;
+}
+
+.environment-indicator {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 0.8em;
+    cursor: help;
 }

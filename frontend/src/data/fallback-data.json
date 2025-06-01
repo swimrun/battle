@@ -1,0 +1,100 @@
+{
+  "teams": [
+    {
+      "teamName": "Floating Rockets",
+      "numberOfMembers": 10,
+      "kmPerPerson": 78.1,
+      "totalKm": 780.5,
+      "place": 1
+    },
+    {
+      "teamName": "The Turbo Tadpoles- die Kraulquappen",
+      "numberOfMembers": 10,
+      "kmPerPerson": 75.4,
+      "totalKm": 753.5,
+      "place": 2
+    },
+    {
+      "teamName": "Come on Swimrun",
+      "numberOfMembers": 10,
+      "kmPerPerson": 70.7,
+      "totalKm": 707,
+      "place": 3
+    },
+    {
+      "teamName": "HighRunners",
+      "numberOfMembers": 6,
+      "kmPerPerson": 31.3,
+      "totalKm": 188,
+      "place": 8
+    },
+    {
+      "teamName": "SwimRun Bavaria",
+      "numberOfMembers": 5,
+      "kmPerPerson": 30.9,
+      "totalKm": 154.5,
+      "place": 9
+    },
+    {
+      "teamName": "Ducks&OX",
+      "numberOfMembers": 6,
+      "kmPerPerson": 29.3,
+      "totalKm": 176,
+      "place": 10
+    },
+    {
+      "teamName": "The Dutch SwimRunners",
+      "numberOfMembers": 8,
+      "kmPerPerson": 24,
+      "totalKm": 192,
+      "place": 11
+    },
+    {
+      "teamName": "Donau Iller Plantscher",
+      "numberOfMembers": 8,
+      "kmPerPerson": 22.1,
+      "totalKm": 177,
+      "place": 12
+    },
+    {
+      "teamName": "The Westsiders Stockholm",
+      "numberOfMembers": 6,
+      "kmPerPerson": 22,
+      "totalKm": 132,
+      "place": 13
+    },
+    {
+      "teamName": "Team Alpe Adria",
+      "numberOfMembers": 7,
+      "kmPerPerson": 21.1,
+      "totalKm": 148,
+      "place": 14
+    }
+  ],
+  "nations": [
+    {
+      "nation": "Netherlands",
+      "numberOfMembers": 18,
+      "kmPerPerson": 24,
+      "totalKm": 432,
+      "place": 1,
+      "points": 10
+    },
+    {
+      "nation": "Germany",
+      "numberOfMembers": 14,
+      "kmPerPerson": 26.7,
+      "totalKm": 373.5,
+      "place": 2,
+      "points": 9
+    },
+    {
+      "nation": "Sweden",
+      "numberOfMembers": 6,
+      "kmPerPerson": 22,
+      "totalKm": 132,
+      "place": 3,
+      "points": 8
+    }
+  ]
+} 

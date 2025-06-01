@@ -1,20 +1,46 @@
 import React, { useState, useEffect } from 'react';
 import { Team } from '../types';
-import { fetchTeamData } from '../services/api';
+import { fetchTeamData, downloadData, API_URL, getEnvironment, fetchBackendStatus } from '../services/api';
+import { useLanguage } from '../contexts/LanguageContext';
+import { LanguageSelector } from './LanguageSelector';
 
 export function TeamTable() {
     const [teams, setTeams] = useState<Team[]>([]);
     const [selectedTeam, setSelectedTeam] = useState<string>('The Dutch SwimRunners');
     const [showAllTeams, setShowAllTeams] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
+    const [lastUpdated, setLastUpdated] = useState<string>('');
+    const [dataSource, setDataSource] = useState<'backend' | 'cache' | 'fallback'>('backend');
+    const [backendAvailable, setBackendAvailable] = useState(true);
+    const [backendStatus, setBackendStatus] = useState<any>(null);
+    const { t } = useLanguage();
+
+    const environment = getEnvironment();
+    const environmentColors = {
+        development: '#28a745',
+        test: '#ffc107',
+        acceptance: '#17a2b8',
+        production: '#dc3545'
+    };
 
     useEffect(() => {
         const loadData = async () => {
             try {
-                const data = await fetchTeamData();
-                setTeams(data);
+                const { data, source, backendAvailable } = await fetchTeamData();
+                setTeams(data.teams);
+                setLastUpdated(data.lastUpdated);
+                setDataSource(source);
+                setBackendAvailable(backendAvailable);
+
+                // Fetch backend status
+                try {
+                    const status = await fetchBackendStatus();
+                    setBackendStatus(status);
+                } catch (error) {
+                    console.error('Error fetching backend status:', error);
+                }
             } catch (err) {
-                setError('Fout bij laden van resultaten');
+                setError('Fout bij laden van team samenvatting');
                 console.error(err);
             }
         };
@@ -44,15 +70,59 @@ export function TeamTable() {
     }, {} as Record<number, Team[]>);
 
     // Create final display array with ellipsis
-    const displayTeams = Object.entries(teamsByPlace).flatMap(([place, teams]) => {
+    const displayTeams = Object.entries(teamsByPlace).flatMap(([place, teams], index, array) => {
         const teamsAtPlace = teams.map(team => ({
             ...team,
             displayPlace: parseInt(place)
         }));
+
+        const selectedTeamPlace = teams.find(t => t.teamName === selectedTeam)?.place;
+        if (!selectedTeamPlace) return teamsAtPlace;
+
+        const currentPlace = parseInt(place);
+        
+        // Add ellipsis after top 3 only if there's a gap to the favorite team section
+        if (currentPlace === 3 && selectedTeamPlace > 6) {
+            return [...teamsAtPlace, { 
+                teamName: '...', 
+                displayPlace: 3,
+                numberOfMembers: null,
+                kmPerPerson: null,
+                totalKm: null,
+                place: null
+            } as Team];
+        }
+
+        // Add ellipsis before favorite team section only if there's a gap
+        if (currentPlace === selectedTeamPlace - 3 && selectedTeamPlace > 6) {
+            return [{ 
+                teamName: '...', 
+                displayPlace: currentPlace,
+                numberOfMembers: null,
+                kmPerPerson: null,
+                totalKm: null,
+                place: null
+            } as Team, ...teamsAtPlace];
+        }
+
+        // Add ellipsis after favorite team section only if there are more teams after
+        const lastPlace = Math.max(...Object.keys(teamsByPlace).map(Number));
+        if (currentPlace === selectedTeamPlace + 3 && lastPlace > selectedTeamPlace + 3) {
+            return [...teamsAtPlace, { 
+                teamName: '...', 
+                displayPlace: currentPlace,
+                numberOfMembers: null,
+                kmPerPerson: null,
+                totalKm: null,
+                place: null
+            } as Team];
+        }
+
         return teamsAtPlace;
     });
 
-    const getPlaceDisplay = (place: number) => {
+    const getPlaceDisplay = (place: number | undefined) => {
+        if (!place) return '';
         if (place === 1) return '🥇';
         if (place === 2) return '🥈';
         if (place === 3) return '🥉';
@@ -60,21 +130,55 @@ export function TeamTable() {
     };
 
     const getRowClassName = (team: Team) => {
-        const classes = [];
+        const classes: string[] = [];
         if (team.teamName === selectedTeam) classes.push('selected-team');
         if (team.place === 1) classes.push('first-place');
         if (team.place === 2) classes.push('second-place');
         if (team.place === 3) classes.push('third-place');
+        if (team.teamName === '...') classes.push('ellipsis-row');
         return classes.join(' ');
     };
 
-    if (error) return <p className="error">{error}</p>;
+    const handleDownload = () => {
+        try {
+            downloadData();
+        } catch (error) {
+            setError('Fout bij downloaden van data');
+            console.error(error);
+        }
+    };
+
+    if (error) return <p className="error">{t('common.error')}</p>;
 
     return (
         <div>
+            <h2>Team Samenvatting</h2>
+            
+            <div className="status-bar">
+                <div 
+                    className={`status-indicator ${backendAvailable ? 'online' : 'offline'}`}
+                    title={`Backend URL: ${API_URL}\nEnvironment: ${backendStatus?.environment || 'unknown'}\nVersion: ${backendStatus?.version || 'unknown'}\nLast check: ${backendStatus?.timestamp || 'unknown'}`}
+                >
+                    {backendAvailable ? t('common.status.backendAvailable') : t('common.status.backendUnavailable')}
+                </div>
+                <div 
+                    className="data-source"
+                    title={`Backend URL: ${API_URL}\nCORS allowed origins: ${backendStatus?.cors?.allowedOrigins?.join(', ') || 'unknown'}`}
+                >
+                    {t(`common.status.${dataSource}`)}
+                </div>
+                <div 
+                    className="environment-indicator"
+                    style={{ backgroundColor: environmentColors[environment] }}
+                    title={`Environment: ${environment}\nBackend URL: ${API_URL}\nBackend Environment: ${backendStatus?.environment || 'unknown'}`}
+                >
+                    {environment.charAt(0).toUpperCase()}
+                </div>
+            </div>
+
             <div className="controls">
                 <div className="select-group">
-                    <label htmlFor="favorite-team">Favoriete team:</label>
+                    <label htmlFor="favorite-team">{t('common.favoriteTeam')}:</label>
                     <select 
                         id="favorite-team"
                         value={selectedTeam} 
@@ -93,36 +197,49 @@ export function TeamTable() {
                         checked={showAllTeams}
                         onChange={(e) => setShowAllTeams(e.target.checked)}
                     />
-                    Toon alle teams
+                    {t('common.showAllTeams')}
                 </label>
+                <button onClick={handleDownload} className="download-button">
+                    {t('common.downloadData')}
+                </button>
+                <a 
+                    href="https://docs.google.com/spreadsheets/d/12x2eCsVncoIHADVXxEpDAzDU4ZlnG10HK2RmWx0wCBQ"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="sheet-link"
+                >
+                    {t('common.viewGoogleSheet')}
+                </a>
+                <LanguageSelector />
             </div>
+
+            {lastUpdated && (
+                <div className="last-updated">
+                    {t('common.lastUpdated')}: {new Date(lastUpdated).toLocaleString()}
+                </div>
+            )}
 
             <table>
                 <thead>
                     <tr>
-                        <th>Plaats</th>
-                        <th>Team</th>
-                        <th>Aantal Leden</th>
-                        <th>KM per Persoon</th>
-                        <th>Totale KM</th>
+                        <th>{t('common.place')}</th>
+                        <th>{t('common.team')}</th>
+                        <th>{t('common.members')}</th>
+                        <th>{t('common.kmPerPerson')}</th>
+                        <th>{t('common.totalKm')}</th>
+                        <th>{t('common.points')}</th>
                     </tr>
                 </thead>
                 <tbody>
                     {displayTeams.map((team, index) => (
-                        <React.Fragment key={team.teamName}>
-                            <tr className={getRowClassName(team)}>
-                                <td>{getPlaceDisplay(team.displayPlace)}</td>
-                                <td>{team.teamName}</td>
-                                <td>{team.numberOfMembers || ''}</td>
-                                <td>{team.kmPerPerson || ''}</td>
-                                <td>{team.totalKm || ''}</td>
-                            </tr>
-                            {!showAllTeams && index === displayTeams.length - 1 && (
-                                <tr className="ellipsis-row">
-                                    <td colSpan={5}>...</td>
-                                </tr>
-                            )}
-                        </React.Fragment>
+                        <tr key={team.teamName} className={getRowClassName(team)}>
+                            <td>{team.teamName === '...' ? '' : getPlaceDisplay(team.displayPlace)}</td>
+                            <td>{team.teamName}</td>
+                            <td>{team.numberOfMembers || ''}</td>
+                            <td>{team.kmPerPerson || ''}</td>
+                            <td>{team.totalKm || ''}</td>
+                            <td>{team.points || ''}</td>
+                        </tr>
                     ))}
                 </tbody>
             </table>

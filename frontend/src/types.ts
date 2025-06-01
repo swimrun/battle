@@ -4,6 +4,7 @@ export interface Team {
     kmPerPerson: number | null;
     totalKm: number | null;
     place: number | null;
+    displayPlace?: number;
 }
 
 export interface Nation {
@@ -13,4 +14,14 @@ export interface Nation {
     totalKm: number | null;
     place: number | null;
     points: number | null;
+}
+
+export interface TeamResponse {
+    teams: Team[];
+    lastUpdated: string;
+}
+
+export interface NationResponse {
+    nations: Nation[];
+    lastUpdated: string;
 } 

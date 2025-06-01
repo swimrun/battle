@@ -79,6 +79,8 @@ async function fetchSheetData(sheetId) {
 // Helper function to process the response data
 function processResponse(res, resolve, reject) {
     let data = '';
+    const lastModified = res.headers['last-modified'] || new Date().toISOString();
+    
     res.on('data', (chunk) => data += chunk);
     res.on('end', () => {
         try {
@@ -120,7 +122,7 @@ function processResponse(res, resolve, reject) {
             const teams = transformTeamData(teamRows);
             const nations = transformNationData(nationRows);
 
-            resolve({ teams, nations });
+            resolve({ teams, nations, lastModified });
         } catch (error) {
             reject(error);
         }
@@ -205,6 +207,7 @@ apiRouter.get('/competition-data', async (req, res) => {
         if (isTest) {
             // Use test data
             data = await getTestData();
+            data.lastModified = new Date().toISOString();
         } else {
             // Fetch from Google Sheet
             const sheetId = process.env.GOOGLE_SHEET_ID;
@@ -218,7 +221,10 @@ apiRouter.get('/competition-data', async (req, res) => {
             return res.status(404).json({ error: 'No team data found' });
         }
 
-        res.json(data.teams);
+        res.json({
+            teams: data.teams,
+            lastUpdated: data.lastModified
+        });
     } catch (error) {
         console.error('Error fetching team data:', error);
         res.status(500).json({ error: 'Failed to fetch team data' });
@@ -271,6 +277,7 @@ apiRouter.get('/nation-summary', async (req, res) => {
         if (isTest) {
             // Use test data
             data = await getTestData();
+            data.lastModified = new Date().toISOString();
         } else {
             // Fetch from Google Sheet
             const sheetId = process.env.GOOGLE_SHEET_ID;
@@ -284,7 +291,10 @@ apiRouter.get('/nation-summary', async (req, res) => {
             return res.status(404).json({ error: 'No nation data found' });
         }
 
-        res.json(data.nations);
+        res.json({
+            nations: data.nations,
+            lastUpdated: data.lastModified
+        });
     } catch (error) {
         console.error('Error fetching nation data:', error);
         res.status(500).json({ error: 'Failed to fetch nation data' });
