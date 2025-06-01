@@ -21,6 +21,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.DEPLOY_TOKEN }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
@@ -48,4 +50,8 @@ jobs:
           clean: true
           single-commit: true
           commit-message: "Deploy battle app"
-          target-folder: battle 
+          target-folder: battle
+          token: ${{ secrets.DEPLOY_TOKEN }}
+
+      - name: Set output
+        run: echo "Deployed to ${{ steps.deployment.outputs.page_url }}" >> $GITHUB_OUTPUT 
