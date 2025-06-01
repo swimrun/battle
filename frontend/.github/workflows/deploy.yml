@@ -1,23 +1,17 @@
-name: Deploy Battle App
+name: Deploy Battle App to GitHub Pages
 
 on:
   push:
     branches: [ main ]
     paths:
       - 'battle/frontend/**'
-
-# Add permissions block
-permissions:
-  contents: write
-  pages: write
-  id-token: write
+  workflow_dispatch:  # Allow manual triggering
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -41,17 +35,22 @@ jobs:
           cd battle/frontend
           npm run build
 
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: JamesIves/github-pages-deploy-action@v4
-        with:
-          folder: battle/frontend/dist
-          branch: gh-pages
-          clean: true
-          single-commit: true
-          commit-message: "Deploy battle app"
-          target-folder: battle
-          token: ${{ secrets.DEPLOY_TOKEN }}
+      - name: Debug Info
+        run: |
+          echo "Current directory: $(pwd)"
+          echo "Listing contents of dist folder:"
+          ls -la battle/frontend/dist
+          echo "Git status:"
+          git status
+          echo "Git remote:"
+          git remote -v
 
-      - name: Set output
-        run: echo "Deployed to ${{ steps.deployment.outputs.page_url }}" >> $GITHUB_OUTPUT 
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.DEPLOY_TOKEN }}
+          publish_dir: ./battle/frontend/dist
+          publish_branch: gh-pages
+          destination_dir: battle
+          commit_message: "Deploy battle app"
+          force_orphan: true  # Force clean deployment 
