@@ -5,6 +5,7 @@ export interface Team {
     totalKm: number | null;
     place: number | null;
     displayPlace?: number;
+    points?: number | null;
 }
 
 export interface Nation {

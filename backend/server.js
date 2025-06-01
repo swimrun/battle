@@ -16,7 +16,9 @@ const isTest = process.env.NODE_ENV === 'test';
 
 // CORS configuration
 const corsOptions = {
-    origin: process.env.FRONTEND_URL.split(','),
+    origin: process.env.NODE_ENV === 'production' 
+        ? process.env.FRONTEND_URL.split(',').map(url => url.trim())
+        : '*',
     methods: ['GET'],
     allowedHeaders: ['Content-Type'],
     credentials: true
@@ -24,7 +26,12 @@ const corsOptions = {
 
 // Middleware
 app.use(cors(corsOptions));
-console.log(corsOptions);
+console.log('CORS Configuration:', {
+    origin: corsOptions.origin,
+    methods: corsOptions.methods,
+    allowedHeaders: corsOptions.allowedHeaders,
+    credentials: corsOptions.credentials
+});
 app.use(express.json());
 
 // Create a router for API routes
@@ -299,6 +306,26 @@ apiRouter.get('/nation-summary', async (req, res) => {
         console.error('Error fetching nation data:', error);
         res.status(500).json({ error: 'Failed to fetch nation data' });
     }
+});
+
+// Add test endpoint to show configuration
+apiRouter.get('/test', (req, res) => {
+    res.json({
+        status: 'ok',
+        environment: process.env.NODE_ENV,
+        version: '1.0.0',
+        timestamp: new Date().toISOString(),
+        cors: {
+            allowedOrigins: process.env.FRONTEND_URL.split(',').map(url => url.trim()),
+            methods: ['GET'],
+            headers: ['Content-Type']
+        },
+        config: {
+            sheetsId: process.env.GOOGLE_SHEET_ID,
+            apiKey: process.env.GOOGLE_API_KEY ? 'configured' : 'not configured',
+            updateInterval: process.env.UPDATE_INTERVAL || 300000
+        }
+    });
 });
 
 // Mount the API router under /api
